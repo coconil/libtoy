@@ -1,2 +1,2 @@
 # libtoy
-a toy librariy for lean c++
+a toy project for beginer to learn c++
