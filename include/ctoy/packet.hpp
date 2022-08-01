@@ -7,8 +7,6 @@
 namespace ctoy {
 template <typename Sync, typename Head, typename Size = unsigned int, Size max_data_len = 0> class Packet {
 public:
-  using T = uint8_t;
-  using PacketFifo = Fifo<T, Size, max_data_len + sizeof(Head) + sizeof(Sync)>;
   enum class Result {
     MORE_DATA,
     READY,
@@ -18,8 +16,9 @@ public:
   Packet() {
   }
 
-  // private:
-public:
+  private:
+  using T = uint8_t;
+  using PacketFifo = Fifo<T, Size, max_data_len + sizeof(Head) + sizeof(Sync)>;
   using Checksum = decltype(((Head *)0)->checksum);
   enum class ParseState {
     SYNC = 0,
@@ -64,12 +63,13 @@ public:
 
       fifo.peek(reinterpret_cast<T *>(&head), sizeof(head), sizeof(Sync));
 
-      if ((head.len + sizeof(Head)) > fifo.getCapacity()) {
+      if (head.len > max_data_len) {
         fifo.drop();
         continue;
       }
 
       stat = ParseState::DATA;
+      len = head.len;
       if (count < (sizeof(Head) + head.len)) {
         goto _parse_abort;
       }
